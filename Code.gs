@@ -817,124 +817,6 @@ function CUSTOM_AGENT(companyUrl, analysisInstructions) {
 }
 
 /**
- * Creates the add-on menu when the spreadsheet opens
- */
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Data Enrichment')
-    .addItem('Set SERP API Key', 'showSetApiKeyDialog')
-    .addItem('Set Together API Key', 'showSetTogetherApiKeyDialog')
-    .addSeparator()
-    .addItem('Formula Builder', 'showFormulaBuilder')
-    .addSeparator()
-    .addItem('Run Email Test', 'testEmailValidation')
-    .addItem('Run Web Search Test', 'testWebSearch')
-    .addItem('Run Person Lookup Test', 'testPersonLookup')
-    .addItem('Run LinkedIn Profile Test', 'testLinkedInProfile')
-    .addItem('Run Company LinkedIn Test', 'testBusinessLinkedIn')
-    .addItem('Run Phone Lookup Test', 'testPhoneLookup')
-    .addItem('Run AI Analysis Test', 'testAgentAnalysis')
-    .addSeparator()
-    .addItem('About', 'showAbout')
-    .addItem('Documentation', 'showDocs')
-    .addToUi();
-}
-
-/**
- * Shows the about dialog
- */
-function showAbout() {
-  const ui = SpreadsheetApp.getUi();
-  ui.alert(
-    'Data Enrichment Add-on',
-    'This add-on provides custom functions for data enrichment and validation.\n\n' +
-    'Available functions:\n' +
-    '- CUSTOM_EMAIL(): Email validation and generation\n' +
-    '- CUSTOM_WEBSEARCH(): Web search results\n' +
-    '- CUSTOM_PERSON_LOOKUP(): Person lookup\n' +
-    '- CUSTOM_PERSON_LINKEDIN(): LinkedIn profile extraction\n' +
-    '- CUSTOM_BUSINESS_LINKEDIN(): Company LinkedIn profile extraction\n' +
-    '- CUSTOM_PHONE(): Phone number lookup\n' +
-    '- CUSTOM_PHONE_LINKEDIN(): LinkedIn phone number lookup\n' +
-    '- CUSTOM_AGENT(): AI-powered company analysis using Together.ai\n' +
-    '- More functions coming soon!',
-    ui.ButtonSet.OK
-  );
-}
-
-/**
- * Shows the documentation dialog
- */
-function showDocs() {
-  const ui = SpreadsheetApp.getUi();
-  ui.alert(
-    'Function Documentation',
-    'CUSTOM_EMAIL(ownerName, companyDomain, existingEmail)\n' +
-    '- ownerName: Person\'s full name (optional)\n' +
-    '- companyDomain: Company\'s domain (optional)\n' +
-    '- existingEmail: Email to validate (optional)\n\n' +
-    'CUSTOM_WEBSEARCH(query, maxResults)\n' +
-    '- query: Search term (required)\n' +
-    '- maxResults: Maximum number of results (optional, default 5)\n\n' +
-    'CUSTOM_PERSON_LOOKUP(jobTitle, companyDomain, maxResults)\n' +
-    '- jobTitle: Job title to search for (required)\n' +
-    '- companyDomain: Company\'s domain (required)\n' +
-    '- maxResults: Maximum number of results (optional, default 3)\n\n' +
-    'CUSTOM_PERSON_LINKEDIN(linkedinUrl)\n' +
-    '- linkedinUrl: LinkedIn profile URL (required)\n\n' +
-    'CUSTOM_BUSINESS_LINKEDIN(companyLinkedinUrl)\n' +
-    '- companyLinkedinUrl: Company LinkedIn profile URL (required)\n\n' +
-    'CUSTOM_PHONE(personName, address)\n' +
-    '- personName: Person\'s full name (required)\n' +
-    '- address: Person\'s address or location (required)\n\n' +
-    'CUSTOM_PHONE_LINKEDIN(linkedinUrl)\n' +
-    '- linkedinUrl: LinkedIn profile URL (required)\n\n' +
-    'CUSTOM_AGENT(companyUrl, analysisInstructions)\n' +
-    '- companyUrl: Company\'s website URL (required)\n' +
-    '- analysisInstructions: Analysis instructions for the AI (required)\n' +
-    '- Note: Uses r.jina.ai for website summarization and Together.ai for analysis\n\n' +
-    'Examples:\n' +
-    '=CUSTOM_EMAIL(,,user@example.com)\n' +
-    '=CUSTOM_EMAIL("John Doe", "example.com")\n' +
-    '=CUSTOM_WEBSEARCH("artificial intelligence")\n' +
-    '=CUSTOM_WEBSEARCH("company news", 3)\n' +
-    '=CUSTOM_PERSON_LOOKUP("CEO", "example.com")\n' +
-    '=CUSTOM_PERSON_LINKEDIN("https://www.linkedin.com/in/example")\n' +
-    '=CUSTOM_BUSINESS_LINKEDIN("https://www.linkedin.com/company/example")\n' +
-    '=CUSTOM_PHONE("John Smith", "New York, NY")\n' +
-    '=CUSTOM_PHONE_LINKEDIN("https://www.linkedin.com/in/example")\n' +
-    '=CUSTOM_AGENT("https://example.com", "Analyze the company\'s industry and main offerings")',
-    ui.ButtonSet.OK
-  );
-}
-
-// Add a test function that can be run from the menu
-function testEmailValidation() {
-  const ui = SpreadsheetApp.getUi();
-  const sheet = SpreadsheetApp.getActiveSheet();
-  
-  try {
-    // Test a valid email
-    const testEmail = "test@gmail.com";
-    const result = validateEmail(testEmail);
-    
-    // Write test results to the sheet
-    sheet.getRange("A1").setValue("Test Results");
-    sheet.getRange("A2").setValue("Email");
-    sheet.getRange("B2").setValue("Valid");
-    sheet.getRange("C2").setValue("Reason");
-    
-    sheet.getRange("A3").setValue(result.email);
-    sheet.getRange("B3").setValue(result.valid.toString());
-    sheet.getRange("C3").setValue(result.reason);
-    
-    ui.alert("Test completed! Check cells A1:C3 for results.");
-  } catch (error) {
-    ui.alert("Error during test: " + error.toString());
-  }
-} 
-
-/**
  * Shows the formula builder interface
  */
 function showFormulaBuilder() {
@@ -1030,3 +912,288 @@ function _createCustomFunction(formulaDef) {
     throw new Error('Failed to create function: ' + error.message);
   }
 }
+
+/**
+ * Loads all custom formulas when the spreadsheet opens
+ */
+function loadCustomFormulas() {
+  const userProperties = PropertiesService.getUserProperties();
+  const formulas = JSON.parse(userProperties.getProperty('customFormulas') || '{}');
+  
+  // Create all saved custom functions
+  function onOpen() {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('Data Enrichment')
+      .addItem('Set SERP API Key', 'showSetApiKeyDialog')
+      .addItem('Set Together API Key', 'showSetTogetherApiKeyDialog')
+      .addSeparator()
+      .addItem('Formula Builder', 'showFormulaBuilder')
+      .addSeparator()
+      .addItem('Run Email Test', 'testEmailValidation')
+      .addItem('Run Web Search Test', 'testWebSearch')
+      .addItem('Run Person Lookup Test', 'testPersonLookup')
+      .addItem('Run LinkedIn Profile Test', 'testLinkedInProfile')
+      .addItem('Run Company LinkedIn Test', 'testBusinessLinkedIn')
+      .addItem('Run Phone Lookup Test', 'testPhoneLookup')
+      .addItem('Run AI Analysis Test', 'testAgentAnalysis')
+      .addSeparator()
+      .addItem('About', 'showAbout')
+      .addItem('Documentation', 'showDocs')
+      .addToUi();
+    
+    // Load any saved custom formulas
+    loadCustomFormulas();
+  }
+
+  /**
+   * Shows the about dialog
+   */
+  function showAbout() {
+    const ui = SpreadsheetApp.getUi();
+    ui.alert(
+      'Data Enrichment Add-on',
+      'This add-on provides custom functions for data enrichment and validation.\n\n' +
+      'Available functions:\n' +
+      '- CUSTOM_EMAIL(): Email validation and generation\n' +
+      '- CUSTOM_WEBSEARCH(): Web search results\n' +
+      '- CUSTOM_PERSON_LOOKUP(): Person lookup\n' +
+      '- CUSTOM_PERSON_LINKEDIN(): LinkedIn profile extraction\n' +
+      '- CUSTOM_BUSINESS_LINKEDIN(): Company LinkedIn profile extraction\n' +
+      '- CUSTOM_PHONE(): Phone number lookup\n' +
+      '- CUSTOM_PHONE_LINKEDIN(): LinkedIn phone number lookup\n' +
+      '- CUSTOM_AGENT(): AI-powered company analysis using Together.ai\n' +
+      '- More functions coming soon!',
+      ui.ButtonSet.OK
+    );
+  }
+
+  /**
+   * Shows the documentation dialog
+   */
+  function showDocs() {
+    const ui = SpreadsheetApp.getUi();
+    ui.alert(
+      'Function Documentation',
+      'CUSTOM_EMAIL(ownerName, companyDomain, existingEmail)\n' +
+      '- ownerName: Person\'s full name (optional)\n' +
+      '- companyDomain: Company\'s domain (optional)\n' +
+      '- existingEmail: Email to validate (optional)\n\n' +
+      'CUSTOM_WEBSEARCH(query, maxResults)\n' +
+      '- query: Search term (required)\n' +
+      '- maxResults: Maximum number of results (optional, default 5)\n\n' +
+      'CUSTOM_PERSON_LOOKUP(jobTitle, companyDomain, maxResults)\n' +
+      '- jobTitle: Job title to search for (required)\n' +
+      '- companyDomain: Company\'s domain (required)\n' +
+      '- maxResults: Maximum number of results (optional, default 3)\n\n' +
+      'CUSTOM_PERSON_LINKEDIN(linkedinUrl)\n' +
+      '- linkedinUrl: LinkedIn profile URL (required)\n\n' +
+      'CUSTOM_BUSINESS_LINKEDIN(companyLinkedinUrl)\n' +
+      '- companyLinkedinUrl: Company LinkedIn profile URL (required)\n\n' +
+      'CUSTOM_PHONE(personName, address)\n' +
+      '- personName: Person\'s full name (required)\n' +
+      '- address: Person\'s address or location (required)\n\n' +
+      'CUSTOM_PHONE_LINKEDIN(linkedinUrl)\n' +
+      '- linkedinUrl: LinkedIn profile URL (required)\n\n' +
+      'CUSTOM_AGENT(companyUrl, analysisInstructions)\n' +
+      '- companyUrl: Company\'s website URL (required)\n' +
+      '- analysisInstructions: Analysis instructions for the AI (required)\n' +
+      '- Note: Uses r.jina.ai for website summarization and Together.ai for analysis\n\n' +
+      'Examples:\n' +
+      '=CUSTOM_EMAIL(,,user@example.com)\n' +
+      '=CUSTOM_EMAIL("John Doe", "example.com")\n' +
+      '=CUSTOM_WEBSEARCH("artificial intelligence")\n' +
+      '=CUSTOM_WEBSEARCH("company news", 3)\n' +
+      '=CUSTOM_PERSON_LOOKUP("CEO", "example.com")\n' +
+      '=CUSTOM_PERSON_LINKEDIN("https://www.linkedin.com/in/example")\n' +
+      '=CUSTOM_BUSINESS_LINKEDIN("https://www.linkedin.com/company/example")\n' +
+      '=CUSTOM_PHONE("John Smith", "New York, NY")\n' +
+      '=CUSTOM_PHONE_LINKEDIN("https://www.linkedin.com/in/example")\n' +
+      '=CUSTOM_AGENT("https://example.com", "Analyze the company\'s industry and main offerings")',
+      ui.ButtonSet.OK
+    );
+  }
+
+  // Add a test function that can be run from the menu
+  function testEmailValidation() {
+    const ui = SpreadsheetApp.getUi();
+    const sheet = SpreadsheetApp.getActiveSheet();
+    
+    try {
+      // Test a valid email
+      const testEmail = "test@gmail.com";
+      const result = validateEmail(testEmail);
+      
+      // Write test results to the sheet
+      sheet.getRange("A1").setValue("Test Results");
+      sheet.getRange("A2").setValue("Email");
+      sheet.getRange("B2").setValue("Valid");
+      sheet.getRange("C2").setValue("Reason");
+      
+      sheet.getRange("A3").setValue(result.email);
+      sheet.getRange("B3").setValue(result.valid.toString());
+      sheet.getRange("C3").setValue(result.reason);
+      
+      ui.alert("Test completed! Check cells A1:C3 for results.");
+    } catch (error) {
+      ui.alert("Error during test: " + error.toString());
+    }
+  }
+
+  // Add a test function that can be run from the menu
+  function testAgentAnalysis() {
+    const ui = SpreadsheetApp.getUi();
+    const sheet = SpreadsheetApp.getActiveSheet();
+    
+    try {
+      // Test a valid company analysis
+      const testCompanyUrl = "https://example.com";
+      const testAnalysisInstructions = "Analyze the company's industry and main offerings";
+      const result = CUSTOM_AGENT(testCompanyUrl, testAnalysisInstructions);
+      
+      // Write test results to the sheet
+      sheet.getRange("A1").setValue("Test Results");
+      sheet.getRange("A2").setValue("URL");
+      sheet.getRange("B2").setValue("Analysis Type");
+      sheet.getRange("C2").setValue("Result");
+      
+      sheet.getRange("A3").setValue(result[0][0]);
+      sheet.getRange("B3").setValue(result[0][1]);
+      sheet.getRange("C3").setValue(result[0][2]);
+      
+      ui.alert("Test completed! Check cells A1:C3 for results.");
+    } catch (error) {
+      ui.alert("Error during test: " + error.toString());
+    }
+  }
+}
+
+/**
+ * Handles API calls from the React application
+ * @param {string} functionName - The name of the function to call
+ * @param {Array} parameters - The parameters to pass to the function
+ * @return {Object} The result of the function call
+ */
+function callFunction(functionName, parameters) {
+  // Verify the function exists
+  if (typeof this[functionName] !== 'function') {
+    throw new Error(`Function ${functionName} not found`);
+  }
+
+  // Call the function with the provided parameters
+  try {
+    const result = this[functionName].apply(null, parameters);
+    return { result };
+  } catch (error) {
+    throw new Error(`Error executing ${functionName}: ${error.message}`);
+  }
+}
+
+/**
+ * Custom function to perform web search and AI analysis on the results
+ * @param {string} searchQuery - The search query
+ * @param {string} formatInstructions - Instructions for formatting and analyzing the results
+ * @param {number} maxResults - Maximum number of results (optional, default 3)
+ * @return {string[][]} Formatted results in a 2D array for spreadsheet display
+ * @customfunction
+ */
+function CUSTOM_SMART_SEARCH(searchQuery, formatInstructions, maxResults = 3) {
+  if (!searchQuery) {
+    return [['Error'], ['Search query is required']];
+  }
+
+  const serpApiKey = getApiKey();
+  const togetherApiKey = getTogetherApiKey();
+  
+  if (!serpApiKey || !togetherApiKey) {
+    return [['Error'], ['Both SERP API and Together API keys are required. Use "Data Enrichment > Set API Key" to configure.']];
+  }
+
+  try {
+    // First, perform web search
+    const searchResults = CUSTOM_WEBSEARCH(searchQuery, maxResults);
+    if (searchResults[0][0] === 'Error' || searchResults[0][0] === 'No Results') {
+      return searchResults;
+    }
+
+    // Remove header row and prepare content for AI analysis
+    const contentToAnalyze = searchResults.slice(1).map(row => ({
+      title: row[0],
+      description: row[1],
+      url: row[2]
+    }));
+
+    // Prepare prompt for AI analysis
+    const prompt = `Based on these search results about "${searchQuery}":\n\n` +
+      contentToAnalyze.map(result => 
+        `Title: ${result.title}\nDescription: ${result.description}\nURL: ${result.url}\n`
+      ).join('\n') +
+      `\nPlease analyze and format the results according to these instructions: ${formatInstructions}`;
+
+    // Call Together.ai API for analysis
+    const togetherResponse = UrlFetchApp.fetch('https://api.together.xyz/v1/chat/completions', {
+      method: 'post',
+      headers: {
+        'Authorization': `Bearer ${togetherApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      payload: JSON.stringify({
+        model: 'meta-llama/Llama-Vision-Free',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an AI analyst that provides insightful analysis of web search results in the requested format.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      }),
+      muteHttpExceptions: true
+    });
+
+    const aiData = JSON.parse(togetherResponse.getContentText());
+    if (!aiData.choices || !aiData.choices[0] || !aiData.choices[0].message) {
+      throw new Error('Invalid response from Together API');
+    }
+
+    const analysis = aiData.choices[0].message.content.trim();
+
+    // Return formatted results
+    return [
+      ['Search Query', 'AI Analysis'],
+      [searchQuery, analysis]
+    ];
+
+  } catch (error) {
+    console.error('Smart search error:', error);
+    return [
+      ['Error'],
+      ['Failed to perform smart search. Error: ' + error.toString()]
+    ];
+  }
+}
+
+// Add test function for smart search
+function testSmartSearch() {
+  const ui = SpreadsheetApp.getUi();
+  const sheet = SpreadsheetApp.getActiveSheet();
+  
+  try {
+    // Test smart search
+    const result = CUSTOM_SMART_SEARCH(
+      "AI developments in Indonesia last week",
+      "Format each result as: [Title], [Brief Summary], [URL]. Then add a paragraph analyzing the trends."
+    );
+    
+    // Write results to sheet
+    const range = sheet.getRange(1, 19, result.length, 2); // Starting at column S
+    range.setValues(result);
+    
+    ui.alert("Test completed! Check columns S-T for results.");
+  } catch (error) {
+    ui.alert("Error during test: " + error.toString());
+  }
+} 
