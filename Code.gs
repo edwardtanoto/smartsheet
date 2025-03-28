@@ -936,6 +936,7 @@ function loadCustomFormulas() {
       .addItem('Run Company LinkedIn Test', 'testBusinessLinkedIn')
       .addItem('Run Phone Lookup Test', 'testPhoneLookup')
       .addItem('Run AI Analysis Test', 'testAgentAnalysis')
+      .addItem('Run Smart Search Test', 'testSmartSearch')
       .addSeparator()
       .addItem('About', 'showAbout')
       .addItem('Documentation', 'showDocs')
